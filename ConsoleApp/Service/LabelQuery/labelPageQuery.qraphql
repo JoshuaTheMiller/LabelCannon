@@ -1,0 +1,17 @@
+﻿query getLabelPageForRepository($Owner: String!, $Repository: String!, $LabelPage: String) { 
+  repository(owner:$Owner, name:$Repository) {
+    labels(first:100, after:$LabelPage) {
+      edges {
+        node {
+          color
+          name
+          description
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}

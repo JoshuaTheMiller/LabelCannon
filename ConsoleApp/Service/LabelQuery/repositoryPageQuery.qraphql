@@ -1,0 +1,36 @@
+﻿query labelQuery($RepositoryPage: String, $OrganizationLogin: String!) {
+  organization(login: $OrganizationLogin) {
+	name
+    repositories(first: 100, after: $RepositoryPage) {
+      edges {
+        node {
+          owner {
+            id
+            login
+          }
+          name
+          id
+          labels(first: 100) {
+            edges {
+              node {
+                color
+                description
+                name
+              }
+            }
+			totalCount
+            pageInfo {
+              endCursor
+              hasNextPage
+            }
+          }
+        }
+      }
+	  totalCount
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}
