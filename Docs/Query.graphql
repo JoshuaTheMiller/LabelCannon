@@ -1,0 +1,33 @@
+query ($repoNextPage: String, $labelNextPage: String, $organizationLogin: String!) {
+    organization(login:$organizationLogin) {
+      repositories(first: 2, after: $repoNextPage) {
+        edges {
+          node {
+            owner {
+              id
+              login
+            }
+            name
+            id
+            labels(first: 100, after: $labelNextPage) {
+              edges {
+                node {
+                  color
+                  description
+                  name
+                }
+              }
+              pageInfo {
+                endCursor
+                hasNextPage
+              }
+            }
+          }
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+      }
+    }
+  }
