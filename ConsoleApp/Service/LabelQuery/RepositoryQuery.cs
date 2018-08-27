@@ -2,14 +2,14 @@
 
 namespace Service.LabelQuery
 {
-    public sealed class RepositoryQuery
+    public sealed class OrganizationRepositoryQuery
     {
         private readonly IStringSerializer stringSerializer;
         private readonly string query;
         private readonly string owner;
         private string pageId = null;        
 
-        public RepositoryQuery(IStringSerializer stringSerializer, string query, string owner)
+        public OrganizationRepositoryQuery(IStringSerializer stringSerializer, string query, string owner)
         {
             this.stringSerializer = stringSerializer;
             this.query = query;

@@ -1,44 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Service.LabelQuery.RepositoryQueryResponse;
 using Service.Query;
 
 namespace Service.LabelQuery
 {
-    public sealed class RepositoryQueryExecutor : IQueryExecutor<RepositoryQuery, Model.Owner>
+    public sealed class RepositoryQueryExecutor : IQueryExecutor<OrganizationRepositoryQuery, Model.Owner>
     {        
-        private readonly IStringDeserializer stringDeserializer;
-        private readonly IMapper<Data, Model.Owner> mapper;
-        private readonly HttpClient httpClient;
+        private readonly IStringDeserializer stringDeserializer;        
+        private readonly IWebClient webClient;
+        private readonly IMapper<Data, Model.Owner> mapper;                      
 
-        private readonly string hostName = "github.chrobinson.com";        
-
-        public RepositoryQueryExecutor(IStringDeserializer stringDeserializer, IMapper<Data, Model.Owner> mapper)
+        public RepositoryQueryExecutor(IStringDeserializer stringDeserializer, IMapper<Data, Model.Owner> mapper, IWebClient webClient)
         {            
             this.stringDeserializer = stringDeserializer;
-            this.mapper = mapper;
-            this.httpClient = new HttpClient();
-
-            var authorization = "";
-
-            httpClient.DefaultRequestHeaders.Add("Authorization", $"bearer {authorization}");
+            this.mapper = mapper;            
+            this.webClient = webClient;                                    
         }
 
-        public async Task<Model.Owner> ExecuteQuery(RepositoryQuery query, Action<int, int, long> progressReporter)
+        public async Task<Model.Owner> ExecuteQuery(string hostName, OrganizationRepositoryQuery query, Action<int, int, long> progressReporter)
         {           
-            var data = await ExecuteQueryStartAsync(query, progressReporter);
+            var data = await ExecuteQueryStartAsync(hostName, query, progressReporter);
 
             return mapper.MapData(data);
         }
 
-        private async Task<Data> ExecuteQueryStartAsync(RepositoryQuery query, Action<int, int, long> progressReporter)
+        private async Task<Data> ExecuteQueryStartAsync(string hostName, OrganizationRepositoryQuery query, Action<int, int, long> progressReporter)
         {
             var stopWatch = new Stopwatch();
             
-            var data = await GetRepositoryPage(query, null);            
+            var data = await GetRepositoryPage(hostName, query, null);            
 
             var currentRepositoryPage = data.Organization.Repositories;
 
@@ -58,7 +51,7 @@ namespace Service.LabelQuery
                 currentPage++;
 
                 stopWatch.Restart();
-                var moreData = await GetRepositoryPage(query, nextPageId);
+                var moreData = await GetRepositoryPage(hostName, query, nextPageId);
                 stopWatch.Stop();
 
                 progressReporter.Invoke(totalAmountOfPages, currentPage, stopWatch.ElapsedMilliseconds);
@@ -74,19 +67,15 @@ namespace Service.LabelQuery
             return data;
         }
 
-        private async Task<Data> GetRepositoryPage(RepositoryQuery query, string repoPage)
+        private async Task<Data> GetRepositoryPage(string hostName, OrganizationRepositoryQuery query, string repoPage)
         {            
             var url = $"https://{hostName}/api/graphql";
 
             query.SetPageId(repoPage);
 
-            var response = await httpClient.PostAsync(url, new StringContent(query.GetQueryAsString()));
+            var response = await webClient.PostAsync<string, RootObject>(url, query.GetQueryAsString());
 
-            var body = await response.Content.ReadAsStringAsync();
-
-            var rootObject = stringDeserializer.Deserialize<RootObject>(body);
-
-            return rootObject.Data;
+            return response.Data;
         }
     }
 }

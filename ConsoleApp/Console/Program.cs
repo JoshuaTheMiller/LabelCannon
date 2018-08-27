@@ -11,23 +11,48 @@ namespace ConsoleApp
     {
         static void Main(string[] args)
         {
-            Execute().Wait();
+            string authorization = string.Empty;
+            string hostName = string.Empty;
+            string organization = string.Empty;
+
+            authorization = AskUserForValue("Please enter a valid GitHub Authorization Key");
+            hostName = AskUserForValue("Please enter a valid GitHub hostname");
+            organization = AskUserForValue("Please enter a valid GitHub organization");
+
+            Execute(authorization, hostName, organization).Wait();
             Console.ReadLine();
         }
 
-        private static async Task Execute()
+        private static string AskUserForValue(string message)
+        {
+            string value = string.Empty;
+
+            while (string.IsNullOrWhiteSpace(value))
+            {
+                Console.WriteLine(message);
+                value = Console.ReadLine();
+            }
+
+            return value;
+        }
+
+        private static async Task Execute(string authorization, string hostname, string organization)
         {
             var labelQueryProvider = new TextResourceProvider();
             var stringSerializer = new StringSerializer();
             var stringDeserializer = new StringDeserializer();
             var mapper = new DataToOwnerMapper();
+            var configurationProvider = new ConfigurationProvider();
+            configurationProvider.SetConfigurationValue("authorization", authorization);
+
+            var webClient = new WebClient(stringSerializer, stringDeserializer, configurationProvider);
 
             var factory = new RepositoryQueryFactory(labelQueryProvider, stringSerializer);
 
-            var queryExecutor = new RepositoryQueryExecutor(stringDeserializer, mapper);
+            var queryExecutor = new RepositoryQueryExecutor(stringDeserializer, mapper, webClient);
 
-            var query = factory.GetQuery("CHR");
-            var response = await queryExecutor.ExecuteQuery(query, WriteProgress);
+            var query = factory.GetQuery(organization);
+            var response = await queryExecutor.ExecuteQuery(hostname, query, WriteProgress);
 
             var responseAsString = stringSerializer.Serialize(response);
 

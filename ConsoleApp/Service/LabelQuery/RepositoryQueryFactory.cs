@@ -13,11 +13,11 @@
             this.stringSerializer = stringSerializer;
         }
 
-        public RepositoryQuery GetQuery(string orginaztionName)
+        public OrganizationRepositoryQuery GetQuery(string orginaztionName)
         {
             var labelQuery = repositoryPageQueryProvider.GetResource(queryResourceKey);
 
-            return new RepositoryQuery(stringSerializer, labelQuery, orginaztionName);            
+            return new OrganizationRepositoryQuery(stringSerializer, labelQuery, orginaztionName);            
         }
     }
 }

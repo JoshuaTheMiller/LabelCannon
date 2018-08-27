@@ -2,6 +2,6 @@
 {
     public interface IRepositoryQueryFactory
     {
-        RepositoryQuery GetQuery(string orginaztionName);
+        OrganizationRepositoryQuery GetQuery(string orginaztionName);
     }
 }
